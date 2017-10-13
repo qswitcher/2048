@@ -61,13 +61,15 @@ def smoothness(grid):
         for y in range(4):
             if cellOccupied(grid, (x, y)):
                 value = log(grid.getCellValue((x,y))) /log(2)
-                for direction in range(1,3):
-                    #vector = this.getVector(direction);
-                    #targetCell = this.findFarthestPosition(this.indexes[x][y], vector).next;
+                for vector in [(1,0),(0,1)]:
+                    nextPoint = (x + vector[0], y + vector[1])
 
-                    if cellOccupied(grid, targetCell):
-                        target = grid.getCellValue(targetCell)
-                        targetValue = log(target) / log(2)
+                    # proceed in the next direction while it's empty
+                    while grid.getCellValue(nextPoint) == 0:
+                        nextPoint = (nextPoint[0] + vector[0], nextPoint[1] + vector[1])
+                    nextValue = grid.getCellValue(nextPoint)
+                    if nextValue is not None and nextValue > 0:
+                        targetValue = log(nextValue) / log(2)
                         value -= abs(value - targetValue)
     return value
 
@@ -138,6 +140,9 @@ class State:
         self.coefs = coefs
     
     def eval(self):
+        # max tile
+        maxTileValue = self.grid.getMaxTile()
+
         # available tiles
         available = len(self.grid.getAvailableCells())
 
@@ -145,8 +150,10 @@ class State:
         monacityValue = monacity(self.grid)
 
         # smoothness
-        
-        return log(self.grid.getMaxTile()) + 2.7*available + monacityValue
+        smoothnessValue = smoothness(self.grid)
+
+        # print(maxTileValue, 2.7*log(available), monacityValue, 0.1*smoothnessValue)
+        return maxTileValue + 2.7*log(available) + monacityValue + 0.1*smoothnessValue
 
 
     def children(self, reversed=False):

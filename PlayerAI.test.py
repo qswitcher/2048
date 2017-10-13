@@ -8,8 +8,13 @@ timeLimit = 0.18
 def isOver(startTime):
     return time.clock() - startTime > timeLimit
 
-class State:
-    def __init__(self, grid, move, coefs, alpha, beta),:
+MOCK_VALUES = {
+    [9],
+    [-17, 0],
+    [-17, 14], [0, 14]
+}
+class MockState:
+    def __init__(self, alpha, beta),:
         self.grid = grid
         self.move = move
         self.coefs = coefs
