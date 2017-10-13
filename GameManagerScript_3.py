@@ -3,6 +3,9 @@ from ComputerAI_3 import ComputerAI
 from PlayerAI_3   import PlayerAI
 from Displayer_3  import Displayer
 from random       import randint
+import threading
+from multiprocessing import Pool
+import pprint
 import time
 
 defaultInitialTiles = 2
@@ -31,6 +34,7 @@ class GameManager:
         self.playerAI   = None
         self.displayer  = None
         self.over       = False
+        self.timesup = False
 
     def setComputerAI(self, computerAI):
         self.computerAI = computerAI
@@ -45,6 +49,7 @@ class GameManager:
         if currTime - self.prevTime > timeLimit + allowance:
             print('Time exceeded')
             self.over = True
+            self.timesup = True
         else:
             while time.clock() - self.prevTime < timeLimit + allowance:
                 pass
@@ -102,7 +107,10 @@ class GameManager:
             self.updateAlarm(time.clock())
 
             turn = 1 - turn
-            print(maxTile)
+        if self.timesup:
+            print('Time ran out!')
+            return -1
+
         return maxTile
 
     def isGameOver(self):
@@ -117,22 +125,43 @@ class GameManager:
     def insertRandonTile(self):
         tileValue = self.getNewTileValue()
         cells = self.grid.getAvailableCells()
-        cell = cells[randint(0, len(cells) - 1)]
-        self.grid.setCellValue(cell, tileValue)
+        if len(cells) > 0:
+            cell = cells[randint(0, len(cells) - 1)]
+            self.grid.setCellValue(cell, tileValue)
 
-def main():
-    for i in range(10):
+def run(coefs):
+    
+    results = []
+    for i in range(3):
         gameManager = GameManager()
-        playerAI  	= PlayerAI()
+        playerAI  	= PlayerAI(coefs)
         computerAI  = ComputerAI()
         displayer 	= Displayer()
 
         gameManager.setDisplayer(displayer)
         gameManager.setPlayerAI(playerAI)
         gameManager.setComputerAI(computerAI)
+        results.append(gameManager.start())
 
-        print('Run ',i)
-        print('score: ', gameManager.start())
+    print(coefs)
+    print('score: ', results)
+    print('best of 3: ', max(results))
+    return {'coefs': coefs, 'results': results}
+
+def main():
+    a = [1]
+    b = [1]
+    c = [1]
+
+    coefs = []
+    for ai in a:
+        for bi in b:
+            for ci in c:
+                coefs.append([ai, bi, ci])
+    with Pool(8) as p:
+        results = p.map(run, coefs)
+        pp = pprint.PrettyPrinter(indent = 2)
+        pp.pprint(results)
 
 if __name__ == '__main__':
     main()
