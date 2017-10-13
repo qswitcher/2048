@@ -1,78 +1,25 @@
-from random import randint
-from BaseAI_3 import BaseAI
-from math import log
-import time
+import unittest
+from PlayerAI_3 import *
+from Grid_3 import *
+from Displayer_3 import *
 
-timeLimit = 0.18
+class TestPlayerAI(unittest.TestCase):
 
-def isOver(startTime):
-    return time.clock() - startTime > timeLimit
+    def test_minimize(self):
+        displayer 	= Displayer()
+        gridValues = [[4, 8, 2, 0],
+            [256, 64, 32, 4],
+            [1024, 256, 64, 2],
+            [512, 32, 16, 8]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        displayer.display(grid)
 
-MOCK_VALUES = {
-    [9],
-    [-17, 0],
-    [-17, 14], [0, 14]
-}
-class MockState:
-    def __init__(self, alpha, beta),:
-        self.grid = grid
-        self.move = move
-        self.coefs = coefs
-    
-    def eval(self):
-        # compute score
-        # figure out score based on 
-        # score = 0
-        # for i in range(4):
-        #     for j in range(4): 
-        #         p = self.grid.getCellValue((i, j))
-        #         if p == 0:
-        #             continue
-        #         elif p > 2:
-        #             score += (log(p)/log(2) - 1)*p 
-                
-
-        # available tiles
-        available = len(self.grid.getAvailableCells())
-        # clustering score
-        # clustering = 0
-        # total = 0
-        # for i in range(4):
-        #     for j in range(4):
-        #         current = self.grid.getCellValue((i, j))
-        #         if current == 0:
-        #             continue
-
-        #         for pos in [(i, j-1), (i, j+1), (i-1, j), (i+1, j)]:
-        #             value = self.grid.getCellValue(pos)
-        #             if value is not None:
-        #                 clustering += abs(current - value)
-        #                 total += 1
-        # if total > 0:
-        #     clustering = clustering/total
-
-        # monacity
-
-        # smoothness
+        ai = PlayerAI()
+        self.assertEqual(ai.getMove(grid), 2)
 
 
-        
-        return log(self.grid.getMaxTile()) + 2.7*available 
-
-
-    def children(self, reversed=False):
-        children = []
-        for move in self.grid.getAvailableMoves():
-            grid = self.grid.clone()
-            grid.move(move)
-            children.append(State(grid, move, self.coefs))
-        return sorted(children, key=lambda c: c.eval(), reverse=reversed)
-
-class PlayerAI(BaseAI):
-    def __init__(self, coefficients = [1, 1, 1]):
-        self.coefs = coefficients
-
-    def getMove(self, grid):
-        # moves = grid.getAvailableMoves()
-        # return moves[randint(0, len(moves) - 1)] if moves else None
-        return decision(State(grid, None, self.coefs)).move
+if __name__ == '__main__':
+    unittest.main()

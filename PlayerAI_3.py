@@ -3,19 +3,21 @@ from BaseAI_3 import BaseAI
 from math import log
 import time
 
-timeLimit = 0.16
+timeLimit = 0.2 - 0.05
+MAX_DEPTH = 4
 
 def isOver(startTime):
     return time.clock() - startTime > timeLimit
 
-def minimize(state, alpha, beta, startTime):
-    if isOver(startTime):
+def minimize(state, alpha, beta, startTime, depth = MAX_DEPTH):
+    if isOver(startTime) or state.isGoal() or depth == 0:
         return (None, state.eval())
     
     (minChild, minUtility) = (None, float('inf'))
 
-    for child in state.children():
-        (_, utility) = maximize(child, alpha, beta, startTime)
+    # I'm a dumbass, the computer just inserts tiles, not UP, DOWN, LEFT, RIGHT
+    for child in state.bestAiChildren():
+        (_, utility) = maximize(child, alpha, beta, startTime, depth - 1)
 
         if utility < minUtility:
             (minChild, minUtility) = (child, utility)
@@ -28,14 +30,14 @@ def minimize(state, alpha, beta, startTime):
 
     return (minChild, minUtility)
 
-def maximize(state, alpha, beta, startTime):
-    if isOver(startTime):
+def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
+    if isOver(startTime) or state.isGoal() or depth == 0:
         return (None, state.eval())
 
     (maxChild, maxUtility) = (None, float('-inf'))
 
     for child in state.children(True):
-        (_, utility) = minimize(child, alpha, beta, startTime)
+        (_, utility) = minimize(child, alpha, beta, startTime, depth - 1)
 
         if utility > maxUtility:
             (maxChild, maxUtility) = (child, utility)
@@ -68,7 +70,7 @@ def smoothness(grid):
                     while grid.getCellValue(nextPoint) == 0:
                         nextPoint = (nextPoint[0] + vector[0], nextPoint[1] + vector[1])
                     nextValue = grid.getCellValue(nextPoint)
-                    if nextValue is not None and nextValue > 0:
+                    if (nextValue is not None) and (nextValue > 0):
                         targetValue = log(nextValue) / log(2)
                         value -= abs(value - targetValue)
     return value
@@ -139,6 +141,9 @@ class State:
         self.move = move
         self.coefs = coefs
     
+    def isGoal(self):
+        return self.grid.getMaxTile() == 2048
+
     def eval(self):
         # max tile
         maxTileValue = self.grid.getMaxTile()
@@ -153,15 +158,31 @@ class State:
         smoothnessValue = smoothness(self.grid)
 
         # print(maxTileValue, 2.7*log(available), monacityValue, 0.1*smoothnessValue)
-        return maxTileValue + 2.7*log(available) + monacityValue + 0.1*smoothnessValue
+        return maxTileValue + 2.7*log(available + 1) + monacityValue + 0.1*smoothnessValue
+
+    def bestAiChildren(self):
+        # moves for 2 and 4
+        children = []
+        for value in [2,4]:
+            for pos in self.grid.getAvailableCells():
+                gridCopy = self.grid.clone()
+                gridCopy.insertTile(pos, value)
+                children.append(State(gridCopy, None, None))
+
+        # sort by heuristic
+        return sorted(children, key=lambda c: c.eval())
 
 
     def children(self, reversed=False):
         children = []
-        for move in self.grid.getAvailableMoves():
-            grid = self.grid.clone()
-            grid.move(move)
-            children.append(State(grid, move, self.coefs))
+
+        for d in range(4):
+            gridCopy = self.grid.clone()
+
+            if gridCopy.move(d):
+                children.append(State(gridCopy, d, self.coefs))
+ 
+        # order them in order of which is the best move
         return sorted(children, key=lambda c: c.eval(), reverse=reversed)
 
 class PlayerAI(BaseAI):
