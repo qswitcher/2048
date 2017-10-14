@@ -5,7 +5,7 @@ from Displayer_3 import *
 
 class TestPlayerAI(unittest.TestCase):
 
-    def test_minimize(self):
+    def test(self):
         displayer 	= Displayer()
         gridValues = [[4, 8, 2, 0],
             [256, 64, 32, 4],
@@ -15,10 +15,82 @@ class TestPlayerAI(unittest.TestCase):
         for i in range(4):
             for j in range(4):
                 grid.insertTile((i, j), gridValues[i][j]) 
-        displayer.display(grid)
+        # displayer.display(grid)
 
         ai = PlayerAI()
-        self.assertEqual(ai.getMove(grid), 2)
+        self.assertEquals(ai.getMove(grid), 3)
+
+    def test_monacity1(self):
+        displayer 	= Displayer()
+        gridValues = [[2, 2, 4, 0],
+                      [8, 4, 0, 0],
+                      [2, 0, 0, 0],
+                      [0, 0, 0, 0]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        # displayer.display(grid)
+
+        # -4 penalty
+        self.assertEquals(monacity(grid), -4)
+
+    def test_monacity2(self):
+        displayer 	= Displayer()
+        gridValues = [[2, 0, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 0, 0]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        # displayer.display(grid)
+
+        self.assertEquals(monacity(grid), 0)
+
+    def test_monacity3(self):
+        displayer 	= Displayer()
+        gridValues = [[8, 4, 2, 0],
+                      [4, 2, 0, 0],
+                      [2, 0, 0, 0],
+                      [0, 0, 0, 0]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        # displayer.display(grid)
+
+        # perfectly monotonic, so zero penalty
+        self.assertEquals(monacity(grid), 0)
+
+    def test_smoothness1(self):
+        displayer 	= Displayer()
+        gridValues = [[2, 2, 2, 2],
+                      [2, 2, 2, 2],
+                      [2, 2, 2, 2],
+                      [2, 2, 2, 2]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        # displayer.display(grid)
+
+        self.assertEquals(smoothness(grid), 0)
+        
+    def test_smoothness2(self):
+        displayer 	= Displayer()
+        gridValues = [[2, 2, 2, 0],
+                      [2, 2, 0, 2],
+                      [2, 4, 2, 2],
+                      [2, 2, 2, 2]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        # displayer.display(grid)
+
+        self.assertEquals(smoothness(grid), -4)
 
 
 if __name__ == '__main__':

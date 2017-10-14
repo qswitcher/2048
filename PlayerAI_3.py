@@ -11,7 +11,7 @@ def isOver(startTime):
 
 def minimize(state, alpha, beta, startTime, depth = MAX_DEPTH):
     if isOver(startTime) or state.isGoal() or depth == 0:
-        return (None, state.eval())
+        return (state, state.eval())
     
     (minChild, minUtility) = (None, float('inf'))
 
@@ -32,7 +32,7 @@ def minimize(state, alpha, beta, startTime, depth = MAX_DEPTH):
 
 def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
     if isOver(startTime) or state.isGoal() or depth == 0:
-        return (None, state.eval())
+        return (state, state.eval())
 
     (maxChild, maxUtility) = (None, float('-inf'))
 
@@ -52,13 +52,23 @@ def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
 
 def decision(state):
     (child, _) = maximize(state, float('-inf'), float('inf'), time.clock())
+
+    coefs = child.coefs
+    maxtile = log(child.grid.getMaxTile())/log(2)*coefs[0]
+    available = coefs[1]*len(child.grid.getAvailableCells())
+    monot = coefs[2]*monacity(child.grid)
+    smooth = coefs[3]*smoothness(child.grid)
+    aver = coefs[4]*child.averageTileValue()
+
+    print('maxtile','avail', 'monot', 'smooth', maxtile, available, monot, smooth)
+
     return child
 
 def cellOccupied(grid, pos):
     return grid.getCellValue(pos) > 0
 
 def smoothness(grid):
-    value = 0
+    result = 0
     for x in range(4):
         for y in range(4):
             if cellOccupied(grid, (x, y)):
@@ -72,8 +82,8 @@ def smoothness(grid):
                     nextValue = grid.getCellValue(nextPoint)
                     if (nextValue is not None) and (nextValue > 0):
                         targetValue = log(nextValue) / log(2)
-                        value -= abs(value - targetValue)
-    return value
+                        result -= abs(value - targetValue)
+    return result
 
 def monacity(grid):
     # measures how monotonic the grid is. This means the values of the tiles are strictly increasing
@@ -93,10 +103,12 @@ def monacity(grid):
                 nxt -= 1
             currentValue = 0
             if cellOccupied(grid, (x, current)):
+                cv = grid.getCellValue((x, current))
                 currentValue = log(grid.getCellValue((x, current))) / log(2)
 
             nextValue = 0
             if cellOccupied(grid, (x, nxt)):
+                nv = grid.getCellValue((x, nxt))
                 nextValue = log(grid.getCellValue((x, nxt))) / log(2)
 
             if currentValue > nextValue:
@@ -119,10 +131,12 @@ def monacity(grid):
                 nxt -= 1
             currentValue = 0
             if cellOccupied(grid, (current, y)):
+                cv = grid.getCellValue((current, y))
                 currentValue = log(grid.getCellValue((current, y))) / log(2)
 
             nextValue = 0
             if cellOccupied(grid, (nxt, y)):
+                nv = grid.getCellValue((nxt, y))
                 nextValue = log(grid.getCellValue((nxt, y))) / log(2)
 
             if currentValue > nextValue:
@@ -142,14 +156,32 @@ class State:
         self.coefs = coefs
     
     def isGoal(self):
-        return self.grid.getMaxTile() == 2048
+        return self.grid.getMaxTile() == 2048 or len(self.grid.getAvailableMoves()) == 0
+
+    def averageTileValue(self):
+        averageTileValue = 0
+        sumTiles = 0
+        for i in range(4):
+            for j in range(4):
+                value = self.grid.getCellValue((i, j))
+                averageTileValue += value
+                if value > 0:
+                    sumTiles += 1
+        averageTileValue = log(averageTileValue/sumTiles)/log(2)
+        return averageTileValue
 
     def eval(self):
         # max tile
-        maxTileValue = self.grid.getMaxTile()
+        maxTileValue = log(self.grid.getMaxTile())/log(2)
+
+        # average tile
+        averageTileValue = self.averageTileValue()
 
         # available tiles
-        available = len(self.grid.getAvailableCells())
+        availableValue = len(self.grid.getAvailableCells())
+        # availableValue = 0
+        # if available > 0:
+            # availableValue = available
 
         # monacity
         monacityValue = monacity(self.grid)
@@ -158,7 +190,8 @@ class State:
         smoothnessValue = smoothness(self.grid)
 
         # print(maxTileValue, 2.7*log(available), monacityValue, 0.1*smoothnessValue)
-        return maxTileValue + 2.7*log(available + 1) + monacityValue + 0.1*smoothnessValue
+        coefs = self.coefs
+        return coefs[0]*maxTileValue + coefs[1]*availableValue + coefs[2]*monacityValue + coefs[3]*smoothnessValue
 
     def bestAiChildren(self):
         # moves for 2 and 4
@@ -167,7 +200,7 @@ class State:
             for pos in self.grid.getAvailableCells():
                 gridCopy = self.grid.clone()
                 gridCopy.insertTile(pos, value)
-                children.append(State(gridCopy, None, None))
+                children.append(State(gridCopy, None, self.coefs))
 
         # sort by heuristic
         return sorted(children, key=lambda c: c.eval())
@@ -186,7 +219,7 @@ class State:
         return sorted(children, key=lambda c: c.eval(), reverse=reversed)
 
 class PlayerAI(BaseAI):
-    def __init__(self, coefficients = [1, 1, 1]):
+    def __init__(self, coefficients = [0, 1, 1, 0.1, 0]):
         self.coefs = coefficients
 
     def getMove(self, grid):
