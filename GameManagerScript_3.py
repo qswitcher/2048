@@ -154,16 +154,19 @@ def main():
     # 'available'
     # 'monacity'
     # 'smoothness'
+    # tile in corner
     a = [0] # [0.8, 1, 1.2, 1.5, 2.0]
-    b = range(10)
+    b = [1]
     c = [1]
     d = [0] #0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
+    e = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
     coefs = []
     for ai in a:
         for bi in b:
             for ci in c:
                 for di in d:
-                    coefs.append([ai, bi, ci, di])
+                    for ei in e:
+                        coefs.append([ai, bi, ci, di, ei])
     with Pool(8) as p:
         results = p.map(run, coefs)
         pp = pprint.PrettyPrinter(indent = 2)

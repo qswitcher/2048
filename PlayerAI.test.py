@@ -5,23 +5,8 @@ from Displayer_3 import *
 
 class TestPlayerAI(unittest.TestCase):
 
-    def test(self):
-        displayer 	= Displayer()
-        gridValues = [[4, 8, 2, 0],
-            [256, 64, 32, 4],
-            [1024, 256, 64, 2],
-            [512, 32, 16, 8]]
-        grid = Grid()
-        for i in range(4):
-            for j in range(4):
-                grid.insertTile((i, j), gridValues[i][j]) 
-        # displayer.display(grid)
-
-        ai = PlayerAI()
-        self.assertEquals(ai.getMove(grid), 3)
-
     def test_monacity1(self):
-        displayer 	= Displayer()
+        # displayer 	= Displayer()
         gridValues = [[2, 2, 4, 0],
                       [8, 4, 0, 0],
                       [2, 0, 0, 0],
@@ -36,7 +21,7 @@ class TestPlayerAI(unittest.TestCase):
         self.assertEquals(monacity(grid), -4)
 
     def test_monacity2(self):
-        displayer 	= Displayer()
+        # displayer 	= Displayer()
         gridValues = [[2, 0, 0, 0],
                       [0, 0, 0, 0],
                       [0, 0, 0, 0],
@@ -50,7 +35,7 @@ class TestPlayerAI(unittest.TestCase):
         self.assertEquals(monacity(grid), 0)
 
     def test_monacity3(self):
-        displayer 	= Displayer()
+        # displayer 	= Displayer()
         gridValues = [[8, 4, 2, 0],
                       [4, 2, 0, 0],
                       [2, 0, 0, 0],
@@ -65,7 +50,7 @@ class TestPlayerAI(unittest.TestCase):
         self.assertEquals(monacity(grid), 0)
 
     def test_monacity4(self):
-        displayer 	= Displayer()
+        # displayer 	= Displayer()
         gridValues = [[0, 0, 0, 0],
                       [0, 8, 4, 2],
                       [0, 4, 2, 0],
@@ -80,7 +65,7 @@ class TestPlayerAI(unittest.TestCase):
         self.assertEquals(monacity(grid), -10)
 
     def test_smoothness1(self):
-        displayer 	= Displayer()
+        # displayer 	= Displayer()
         gridValues = [[2, 2, 2, 2],
                       [2, 2, 2, 2],
                       [2, 2, 2, 2],
@@ -93,7 +78,7 @@ class TestPlayerAI(unittest.TestCase):
         self.assertEquals(smoothness(grid), 0)
         
     def test_smoothness2(self):
-        displayer 	= Displayer()
+        # displayer 	= Displayer()
         gridValues = [[2, 2, 2, 0],
                       [2, 2, 0, 2],
                       [2, 4, 2, 2],

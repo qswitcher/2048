@@ -79,6 +79,11 @@ def smoothness(grid):
                         result -= abs(value - targetValue)
     return result
 
+def safe_log(value):
+    if value > 0:
+        return log(value)/log(2)
+    return 0
+
 def monacity(grid):
     # measures how monotonic the grid is. This means the values of the tiles are strictly increasing
     # or decreasing in both the left/right and up/down directions
@@ -90,20 +95,16 @@ def monacity(grid):
         current = 0
         nxt = current+1
         while nxt <4:
-            while nxt<4 and not cellOccupied(grid, (x, nxt)):
-                nxt += 1
-
+            cv = grid.getCellValue((x, current))
+            # while nxt<4 and cv == 0:
+            nxt += 1
             if nxt>=4:
                 nxt -= 1
-            currentValue = 0
-            if cellOccupied(grid, (x, current)):
-                cv = grid.getCellValue((x, current))
-                currentValue = log(grid.getCellValue((x, current))) / log(2)
+            
+            currentValue = safe_log(cv)
 
-            nextValue = 0
-            if cellOccupied(grid, (x, nxt)):
-                nv = grid.getCellValue((x, nxt))
-                nextValue = log(grid.getCellValue((x, nxt))) / log(2)
+            nv = grid.getCellValue((x, nxt))
+            nextValue = safe_log(nv)
 
             if currentValue > nextValue:
                 totals[0] += nextValue - currentValue
@@ -118,20 +119,18 @@ def monacity(grid):
         current = 0
         nxt = current+1
         while nxt <4:
-            while nxt<4 and not cellOccupied(grid, (nxt, y)):
-                nxt += 1
+            #while nxt<4: # and not cellOccupied(grid, (nxt, y)):
+            nxt += 1
 
             if nxt>=4:
                 nxt -= 1
-            currentValue = 0
-            if cellOccupied(grid, (current, y)):
-                cv = grid.getCellValue((current, y))
-                currentValue = log(grid.getCellValue((current, y))) / log(2)
+            
+            cv = grid.getCellValue((current, y))
+            currentValue = safe_log(cv)
 
             nextValue = 0
-            if cellOccupied(grid, (nxt, y)):
-                nv = grid.getCellValue((nxt, y))
-                nextValue = log(grid.getCellValue((nxt, y))) / log(2)
+            nv = grid.getCellValue((nxt, y))
+            nextValue = safe_log(nv)
 
             if currentValue > nextValue:
                 totals[2] += nextValue - currentValue
@@ -168,11 +167,18 @@ class State:
         coefs = self.coefs
         # max tile
         available = len(self.grid.getAvailableCells());
+
+        corners = []
+        for i in range(0, 4, 3):
+            for j in range(0, 4, 3):
+                corners.append(self.grid.getCellValue((i, j)))
+
         factors = {
             'averageTile'    : coefs[0]*self.averageTileValue(),
             'available'  : coefs[1]*available,
             'monacity'   : coefs[2]*monacity(self.grid),
-            'smoothness' : coefs[3]*smoothness(self.grid)
+            'smoothness' : coefs[3]*smoothness(self.grid),
+            'largestcorner': coefs[4]*log(max(corners) + 1)/log(2) # give a bonus for having largest value in corner
         }
 
         if factored:
@@ -205,7 +211,7 @@ class State:
         return sorted(children, key=lambda c: c.eval(), reverse=reversed)
 
 class PlayerAI(BaseAI):
-    def __init__(self, coefficients = [0, 10, 1, 0]):
+    def __init__(self, coefficients = [0, 0, 1, 0, 0]):
         self.coefs = coefficients
 
     def getMove(self, grid):
