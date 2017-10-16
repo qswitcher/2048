@@ -51,17 +51,11 @@ def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
     return (maxChild, maxUtility)
 
 def decision(state):
-    (child, _) = maximize(state, float('-inf'), float('inf'), time.clock())
+    (child, _) = maximize(state, float('-inf'), float('inf'), time.clock()) 
 
-    coefs = child.coefs
-    maxtile = log(child.grid.getMaxTile())/log(2)*coefs[0]
-    available = coefs[1]*len(child.grid.getAvailableCells())
-    monot = coefs[2]*monacity(child.grid)
-    smooth = coefs[3]*smoothness(child.grid)
-    aver = coefs[4]*child.averageTileValue()
-
-    print('maxtile','avail', 'monot', 'smooth', maxtile, available, monot, smooth)
-
+    # print("")
+    # for k, v in child.eval(True).items():
+    #     print(k.ljust(10), v)
     return child
 
 def cellOccupied(grid, pos):
@@ -156,7 +150,7 @@ class State:
         self.coefs = coefs
     
     def isGoal(self):
-        return self.grid.getMaxTile() == 2048 or len(self.grid.getAvailableMoves()) == 0
+        return len(self.grid.getAvailableMoves()) == 0
 
     def averageTileValue(self):
         averageTileValue = 0
@@ -170,28 +164,20 @@ class State:
         averageTileValue = log(averageTileValue/sumTiles)/log(2)
         return averageTileValue
 
-    def eval(self):
-        # max tile
-        maxTileValue = log(self.grid.getMaxTile())/log(2)
-
-        # average tile
-        averageTileValue = self.averageTileValue()
-
-        # available tiles
-        availableValue = len(self.grid.getAvailableCells())
-        # availableValue = 0
-        # if available > 0:
-            # availableValue = available
-
-        # monacity
-        monacityValue = monacity(self.grid)
-
-        # smoothness
-        smoothnessValue = smoothness(self.grid)
-
-        # print(maxTileValue, 2.7*log(available), monacityValue, 0.1*smoothnessValue)
+    def eval(self, factored=False):
         coefs = self.coefs
-        return coefs[0]*maxTileValue + coefs[1]*availableValue + coefs[2]*monacityValue + coefs[3]*smoothnessValue
+        # max tile
+        available = len(self.grid.getAvailableCells());
+        factors = {
+            'averageTile'    : coefs[0]*self.averageTileValue(),
+            'available'  : coefs[1]*available,
+            'monacity'   : coefs[2]*monacity(self.grid),
+            'smoothness' : coefs[3]*smoothness(self.grid)
+        }
+
+        if factored:
+            return factors
+        return sum(factors.values())
 
     def bestAiChildren(self):
         # moves for 2 and 4
@@ -219,7 +205,7 @@ class State:
         return sorted(children, key=lambda c: c.eval(), reverse=reversed)
 
 class PlayerAI(BaseAI):
-    def __init__(self, coefficients = [0, 1, 1, 0.1, 0]):
+    def __init__(self, coefficients = [0, 10, 1, 0]):
         self.coefs = coefficients
 
     def getMove(self, grid):

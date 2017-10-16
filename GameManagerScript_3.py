@@ -132,7 +132,7 @@ class GameManager:
 def run(coefs):
     
     results = []
-    for i in range(5):
+    for i in range(4):
         gameManager = GameManager()
         playerAI  	= PlayerAI(coefs)
         computerAI  = ComputerAI()
@@ -145,24 +145,25 @@ def run(coefs):
 
     print(coefs)
     print('score: ', results)
-    print('best of 3: ', max(results))
-    return {'coefs': coefs, 'results': results}
+    print('best of 3: ', sum(results)*1.0/len(results))
+    return {'coefs': coefs, 'results': results, 'average': sum(results)*1.0/len(results)}
 
 def main():
-    #1, 2.7, 1, 0.1
-
-    a = [1] # [0.8, 1, 1.2, 1.5, 2.0]
-    b = [1] #[2.5, 2.6, 2.7, 2.8, 2.9, 3.0]
-    c = [1] #[0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 2.0]
-    d = [1] #[0.05, 0.07, 0.1, 0.15, 0.2, 0.25, 0.5]#[0.08] #[0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.4, 1]
-    e = [1]
+    # 0 1 1 0.1
+    # 'maxTile'
+    # 'available'
+    # 'monacity'
+    # 'smoothness'
+    a = [0] # [0.8, 1, 1.2, 1.5, 2.0]
+    b = range(10)
+    c = [1]
+    d = [0] #0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
     coefs = []
     for ai in a:
         for bi in b:
             for ci in c:
                 for di in d:
-                    for ei in d:
-                        coefs.append([ai, bi, ci, di, ei])
+                    coefs.append([ai, bi, ci, di])
     with Pool(8) as p:
         results = p.map(run, coefs)
         pp = pprint.PrettyPrinter(indent = 2)

@@ -64,6 +64,21 @@ class TestPlayerAI(unittest.TestCase):
         # perfectly monotonic, so zero penalty
         self.assertEquals(monacity(grid), 0)
 
+    def test_monacity4(self):
+        displayer 	= Displayer()
+        gridValues = [[0, 0, 0, 0],
+                      [0, 8, 4, 2],
+                      [0, 4, 2, 0],
+                      [0, 2, 0, 0]]
+        grid = Grid()
+        for i in range(4):
+            for j in range(4):
+                grid.insertTile((i, j), gridValues[i][j]) 
+        # displayer.display(grid)
+
+        # perfectly monotonic, so zero penalty
+        self.assertEquals(monacity(grid), -10)
+
     def test_smoothness1(self):
         displayer 	= Displayer()
         gridValues = [[2, 2, 2, 2],
@@ -74,7 +89,6 @@ class TestPlayerAI(unittest.TestCase):
         for i in range(4):
             for j in range(4):
                 grid.insertTile((i, j), gridValues[i][j]) 
-        # displayer.display(grid)
 
         self.assertEquals(smoothness(grid), 0)
         
@@ -88,7 +102,6 @@ class TestPlayerAI(unittest.TestCase):
         for i in range(4):
             for j in range(4):
                 grid.insertTile((i, j), gridValues[i][j]) 
-        # displayer.display(grid)
 
         self.assertEquals(smoothness(grid), -4)
 
