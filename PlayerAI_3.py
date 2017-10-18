@@ -9,8 +9,12 @@ MAX_DEPTH = 4
 def isOver(startTime):
     return time.clock() - startTime > timeLimit
 
-def minimize(state, alpha, beta, startTime, depth = MAX_DEPTH):
-    if isOver(startTime) or state.isGoal() or depth == 0:
+def minimize(state, alpha, beta, startTime, depth):
+    # kill recursion and discard value if timeout is reached
+    if isOver(startTime):
+        return (None, None)
+
+    if state.isGoal() or depth == 0:
         return (state, state.eval())
     
     (minChild, minUtility) = (None, float('inf'))
@@ -18,6 +22,9 @@ def minimize(state, alpha, beta, startTime, depth = MAX_DEPTH):
     # I'm a dumbass, the computer just inserts tiles, not UP, DOWN, LEFT, RIGHT
     for child in state.bestAiChildren():
         (_, utility) = maximize(child, alpha, beta, startTime, depth - 1)
+        # abandon recursion if timeout is reached
+        if _ is None:
+            return (None, None)
 
         if utility < minUtility:
             (minChild, minUtility) = (child, utility)
@@ -30,14 +37,20 @@ def minimize(state, alpha, beta, startTime, depth = MAX_DEPTH):
 
     return (minChild, minUtility)
 
-def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
-    if isOver(startTime) or state.isGoal() or depth == 0:
+def maximize(state, alpha, beta, startTime, depth):
+    if isOver(startTime):
+        return (None, None)
+
+    if state.isGoal() or depth == 0:
         return (state, state.eval())
 
     (maxChild, maxUtility) = (None, float('-inf'))
 
     for child in state.children(True):
         (_, utility) = minimize(child, alpha, beta, startTime, depth - 1)
+        # abandon recursion if timeout is reached
+        if _ is None:
+            return (None, None)
 
         if utility > maxUtility:
             (maxChild, maxUtility) = (child, utility)
@@ -51,12 +64,20 @@ def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
     return (maxChild, maxUtility)
 
 def decision(state):
-    (child, _) = maximize(state, float('-inf'), float('inf'), time.clock()) 
+    start = time.clock()
+    maxDepth = 1
+    best = state
 
-    print("")
-    for k, v in child.eval(True).items():
-        print(k.ljust(10), v)
-    return child
+    while not isOver(start):
+        (child, score) = maximize(state, float('-inf'), float('inf'), start, maxDepth) 
+        if child is None or child.move is None:
+            break
+        best = child
+        maxDepth += 1
+    return best
+    # for k, v in child.eval(True).items():
+        # print(k.ljust(10), v)
+    # return child
 
 def cellOccupied(grid, pos):
     return grid.getCellValue(pos) > 0
@@ -235,7 +256,7 @@ class PlayerAI(BaseAI):
     #         'monacity'   : coefs[2]*monacity(self.grid),
     #         'smoothness' : coefs[3]*smoothness(self.grid),
     #         'gradient'
-    def __init__(self, coefficients = [0, 1, 0, 0.5, 1]):
+    def __init__(self, coefficients = [0, 2.7, 1, 0.1, 0]):
         self.coefs = coefficients
 
     def getMove(self, grid):

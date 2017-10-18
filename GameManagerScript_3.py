@@ -132,7 +132,7 @@ class GameManager:
 def run(coefs):
     
     results = []
-    for i in range(4):
+    for i in range(10):
         gameManager = GameManager()
         playerAI  	= PlayerAI(coefs)
         computerAI  = ComputerAI()
@@ -154,12 +154,14 @@ def main():
     # 'available'
     # 'monacity'
     # 'smoothness'
-    # tile in corner
-    a = [0] # [0.8, 1, 1.2, 1.5, 2.0]
-    b = [1]
-    c = [1]
-    d = [0] #0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
-    e = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    # 'gradient'
+    # a = [0] # [0.8, 1, 1.2, 1.5, 2.0]
+    # b = [0.1, 0.5, 1, 1.5, 2, 2.5, 3]
+    # c = [0.1, 0.5, 1, 1.5, 2, 2.5, 3]
+    # d = [0.01, 0.05, 0.1, 0.5, 1, 1.5, 2, 2.5, 3] #0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
+    # e = [0] #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    a, b, c, d, e = [0], [0.5], [1], [1], [0]
+
     coefs = []
     for ai in a:
         for bi in b:
