@@ -53,13 +53,27 @@ def maximize(state, alpha, beta, startTime, depth = MAX_DEPTH):
 def decision(state):
     (child, _) = maximize(state, float('-inf'), float('inf'), time.clock()) 
 
-    # print("")
-    # for k, v in child.eval(True).items():
-    #     print(k.ljust(10), v)
+    print("")
+    for k, v in child.eval(True).items():
+        print(k.ljust(10), v)
     return child
 
 def cellOccupied(grid, pos):
     return grid.getCellValue(pos) > 0
+
+def gradient(grid):
+    mask = [[-3, -2, -1, 0],
+            [-2, -1, 0,  1],
+            [-1, 0, 1, 0],
+            [0, 1, 2, 3]]
+
+    value = 0
+    for x in range(4):
+        for y in range(4):
+            cv = grid.getCellValue((x, y))
+            if cv > 0:
+                value += mask[x][y]*log(cv)/log(2)
+    return value
 
 def smoothness(grid):
     result = 0
@@ -96,8 +110,9 @@ def monacity(grid):
         nxt = current+1
         while nxt <4:
             cv = grid.getCellValue((x, current))
-            # while nxt<4 and cv == 0:
-            nxt += 1
+            while nxt<4 and cv == 0:
+                nxt += 1
+
             if nxt>=4:
                 nxt -= 1
             
@@ -119,13 +134,13 @@ def monacity(grid):
         current = 0
         nxt = current+1
         while nxt <4:
-            #while nxt<4: # and not cellOccupied(grid, (nxt, y)):
-            nxt += 1
+            cv = grid.getCellValue((current, y))
+            while nxt<4 and cv == 0:
+                nxt += 1
 
             if nxt>=4:
                 nxt -= 1
             
-            cv = grid.getCellValue((current, y))
             currentValue = safe_log(cv)
 
             nextValue = 0
@@ -167,6 +182,10 @@ class State:
         coefs = self.coefs
         # max tile
         available = len(self.grid.getAvailableCells());
+        if available > 0:
+            available = log(available)
+        else:
+            available = -100000
 
         corners = []
         for i in range(0, 4, 3):
@@ -174,11 +193,11 @@ class State:
                 corners.append(self.grid.getCellValue((i, j)))
 
         factors = {
-            'averageTile'    : coefs[0]*self.averageTileValue(),
+            'maxValue'    : coefs[0]*log(self.grid.getMaxTile())/log(2),
             'available'  : coefs[1]*available,
             'monacity'   : coefs[2]*monacity(self.grid),
             'smoothness' : coefs[3]*smoothness(self.grid),
-            'largestcorner': coefs[4]*log(max(corners) + 1)/log(2) # give a bonus for having largest value in corner
+            'gradient':  coefs[4]*gradient(self.grid)
         }
 
         if factored:
@@ -201,7 +220,7 @@ class State:
     def children(self, reversed=False):
         children = []
 
-        for d in range(4):
+        for d in range(0, 4):
             gridCopy = self.grid.clone()
 
             if gridCopy.move(d):
@@ -211,7 +230,12 @@ class State:
         return sorted(children, key=lambda c: c.eval(), reverse=reversed)
 
 class PlayerAI(BaseAI):
-    def __init__(self, coefficients = [0, 0, 1, 0, 0]):
+    #  'maxValue'    : coefs[0]*log(self.grid.getMaxTile())/log(2),
+    #         'available'  : coefs[1]*available,
+    #         'monacity'   : coefs[2]*monacity(self.grid),
+    #         'smoothness' : coefs[3]*smoothness(self.grid),
+    #         'gradient'
+    def __init__(self, coefficients = [0, 1, 0, 0.5, 1]):
         self.coefs = coefficients
 
     def getMove(self, grid):
