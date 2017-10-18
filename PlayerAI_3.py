@@ -256,7 +256,7 @@ class PlayerAI(BaseAI):
     #         'monacity'   : coefs[2]*monacity(self.grid),
     #         'smoothness' : coefs[3]*smoothness(self.grid),
     #         'gradient'
-    def __init__(self, coefficients = [0, 2.7, 1, 0.1, 0]):
+    def __init__(self, coefficients = [0, 0.5, 1, 1, 0]):
         self.coefs = coefficients
 
     def getMove(self, grid):
