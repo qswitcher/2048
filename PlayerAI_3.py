@@ -6,10 +6,19 @@ import time
 timeLimit = 0.2 - 0.05
 MAX_DEPTH = 4
 
+
 def isOver(startTime):
     return time.clock() - startTime > timeLimit
 
-def minimize(state, alpha, beta, startTime, depth):
+def addToTable(child, utility, table):
+    table[str(child.grid.map)] = utility
+
+def getFromTable(child, table):
+    if child is None:
+        return None
+    return table.get(str(child.grid.map), None)
+
+def minimize(state, alpha, beta, startTime, depth, transposition_table):
     # kill recursion and discard value if timeout is reached
     if isOver(startTime):
         return (None, None)
@@ -20,8 +29,8 @@ def minimize(state, alpha, beta, startTime, depth):
     (minChild, minUtility) = (None, float('inf'))
 
     # I'm a dumbass, the computer just inserts tiles, not UP, DOWN, LEFT, RIGHT
-    for child in state.bestAiChildren():
-        (_, utility) = maximize(child, alpha, beta, startTime, depth - 1)
+    for child in state.bestAiChildren(transposition_table):
+        (_, utility) = maximize(child, alpha, beta, startTime, depth - 1, transposition_table)
         # abandon recursion if timeout is reached
         if _ is None:
             return (None, None)
@@ -35,9 +44,11 @@ def minimize(state, alpha, beta, startTime, depth):
         if minUtility < beta:
             beta = minUtility
 
+    addToTable(minChild, minUtility, transposition_table)
+
     return (minChild, minUtility)
 
-def maximize(state, alpha, beta, startTime, depth):
+def maximize(state, alpha, beta, startTime, depth, transposition_table = {}):
     if isOver(startTime):
         return (None, None)
 
@@ -46,8 +57,8 @@ def maximize(state, alpha, beta, startTime, depth):
 
     (maxChild, maxUtility) = (None, float('-inf'))
 
-    for child in state.children(True):
-        (_, utility) = minimize(child, alpha, beta, startTime, depth - 1)
+    for child in state.children(transposition_table):
+        (_, utility) = minimize(child, alpha, beta, startTime, depth - 1, transposition_table)
         # abandon recursion if timeout is reached
         if _ is None:
             return (None, None)
@@ -60,6 +71,8 @@ def maximize(state, alpha, beta, startTime, depth):
 
         if maxUtility > alpha:
             alpha = maxUtility
+
+    addToTable(maxChild, maxUtility, transposition_table)
 
     return (maxChild, maxUtility)
 
@@ -118,6 +131,10 @@ def safe_log(value):
     if value > 0:
         return log(value)/log(2)
     return 0
+
+def bestUtility(child, table):
+    value = getFromTable(child, table)
+    return child.eval() if value is None else value
 
 def monacity(grid):
     # measures how monotonic the grid is. This means the values of the tiles are strictly increasing
@@ -206,7 +223,7 @@ class State:
         if available > 0:
             available = log(available)
         else:
-            available = -100000
+            available = -10000000
 
         corners = []
         for i in range(0, 4, 3):
@@ -225,7 +242,7 @@ class State:
             return factors
         return sum(factors.values())
 
-    def bestAiChildren(self):
+    def bestAiChildren(self, table):
         # moves for 2 and 4
         children = []
         for value in [2,4]:
@@ -235,10 +252,10 @@ class State:
                 children.append(State(gridCopy, None, self.coefs))
 
         # sort by heuristic
-        return sorted(children, key=lambda c: c.eval())
+        return sorted(children, key=lambda c: bestUtility(c, table))
 
 
-    def children(self, reversed=False):
+    def children(self, table):
         children = []
 
         for d in range(0, 4):
@@ -248,7 +265,7 @@ class State:
                 children.append(State(gridCopy, d, self.coefs))
  
         # order them in order of which is the best move
-        return sorted(children, key=lambda c: c.eval(), reverse=reversed)
+        return sorted(children, key=lambda c: bestUtility(c, table), reverse=True)
 
 class PlayerAI(BaseAI):
     #  'maxValue'    : coefs[0]*log(self.grid.getMaxTile())/log(2),
@@ -256,10 +273,14 @@ class PlayerAI(BaseAI):
     #         'monacity'   : coefs[2]*monacity(self.grid),
     #         'smoothness' : coefs[3]*smoothness(self.grid),
     #         'gradient'
-    def __init__(self, coefficients = [0, 0.5, 1, 1, 0]):
+    def __init__(self, coefficients = [0, 0.1, 1, 1, 0]):
         self.coefs = coefficients
 
     def getMove(self, grid):
         # moves = grid.getAvailableMoves()
         # return moves[randint(0, len(moves) - 1)] if moves else None
         return decision(State(grid, None, self.coefs)).move
+
+    def printEval(self, grid):
+        for k, v in State(grid, None, self.coefs).eval(True).items():
+            print(k.ljust(10), v)

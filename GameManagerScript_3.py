@@ -141,7 +141,11 @@ def run(coefs):
         gameManager.setDisplayer(displayer)
         gameManager.setPlayerAI(playerAI)
         gameManager.setComputerAI(computerAI)
-        results.append(gameManager.start())
+        result = gameManager.start()
+        displayer.display(gameManager.grid)
+        print('result=', result)
+        playerAI.printEval(gameManager.grid)
+        results.append(result)
 
     print(coefs)
     print('score: ', results)
@@ -160,7 +164,7 @@ def main():
     # c = [0.1, 0.5, 1, 1.5, 2, 2.5, 3]
     # d = [0.01, 0.05, 0.1, 0.5, 1, 1.5, 2, 2.5, 3] #0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
     # e = [0] #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    a, b, c, d, e = [0], [0.5], [1], [1], [0]
+    a, b, c, d, e = [0], [1], [2], [2], [0]
 
     coefs = []
     for ai in a:
