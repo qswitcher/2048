@@ -132,7 +132,7 @@ class GameManager:
 def run(coefs):
     
     results = []
-    for i in range(10):
+    for i in range(20):
         gameManager = GameManager()
         playerAI  	= PlayerAI(coefs)
         computerAI  = ComputerAI()
@@ -142,15 +142,19 @@ def run(coefs):
         gameManager.setPlayerAI(playerAI)
         gameManager.setComputerAI(computerAI)
         result = gameManager.start()
-        displayer.display(gameManager.grid)
         print('result=', result)
-        playerAI.printEval(gameManager.grid)
+        if result < 1024:
+            print('Failed coefficients ', coefs)
+            break
+        # displayer.display(gameManager.grid)
+        # playerAI.printEval(gameManager.grid)
         results.append(result)
 
-    print(coefs)
-    print('score: ', results)
-    print('best of 3: ', sum(results)*1.0/len(results))
-    return {'coefs': coefs, 'results': results, 'average': sum(results)*1.0/len(results)}
+    if len(results) >= 20:
+        print('winner!', coefs)
+        print('results', results)
+
+    return {'coefs': coefs, 'results': results}
 
 def main():
     # 0 1 1 0.1
@@ -159,12 +163,12 @@ def main():
     # 'monacity'
     # 'smoothness'
     # 'gradient'
-    # a = [0] # [0.8, 1, 1.2, 1.5, 2.0]
-    # b = [0.1, 0.5, 1, 1.5, 2, 2.5, 3]
-    # c = [0.1, 0.5, 1, 1.5, 2, 2.5, 3]
-    # d = [0.01, 0.05, 0.1, 0.5, 1, 1.5, 2, 2.5, 3] #0.4, 0.45, 0.5, 0.55, 0.6, 0.65]
-    # e = [0] #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    a, b, c, d, e = [0], [1], [2], [2], [0]
+    a = [0] # [0.8, 1, 1.2, 1.5, 2.0]
+    b = [1]
+    c = [0.4] 
+    d = [0.17, 0.175, 0.18, 0.185, 0.19, 0.195, 0.20, 0.205, 0.210, 0.215, 0.22, 0.225, 0.23] #[0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+    e = [0]
+    # a, b, c, d, e = [0], [1], [2], [2], [0]
 
     coefs = []
     for ai in a:

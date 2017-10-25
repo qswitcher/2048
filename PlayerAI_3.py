@@ -273,14 +273,20 @@ class PlayerAI(BaseAI):
     #         'monacity'   : coefs[2]*monacity(self.grid),
     #         'smoothness' : coefs[3]*smoothness(self.grid),
     #         'gradient'
-    def __init__(self, coefficients = [0, 0.1, 1, 1, 0]):
+    # 0.1 1 1
+    def __init__(self, coefficients = [0, 1, 0.4, 0.25, 0], debug = False):
         self.coefs = coefficients
+        self.debug = debug
 
     def getMove(self, grid):
         # moves = grid.getAvailableMoves()
         # return moves[randint(0, len(moves) - 1)] if moves else None
-        return decision(State(grid, None, self.coefs)).move
+        move =  decision(State(grid, None, self.coefs)).move
+        if self.debug:
+            self.printEval(grid)
+        return move
 
     def printEval(self, grid):
+        print('\ncoefs')
         for k, v in State(grid, None, self.coefs).eval(True).items():
             print(k.ljust(10), v)
